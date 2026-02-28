@@ -8,10 +8,11 @@ import (
 )
 
 type BtConfig struct {
-	Padding         int  `mapstructure:"padding"`
-	FilePreview     bool `mapstructure:"file_preview"`
-	HighlightIndent bool `mapstructure:"highlight_indent"`
-	InPlaceRender   bool `mapstructure:"in_place_render"`
+	Padding         int    `mapstructure:"padding"`
+	FilePreview     bool   `mapstructure:"file_preview"`
+	HighlightIndent bool   `mapstructure:"highlight_indent"`
+	InPlaceRender   bool   `mapstructure:"in_place_render"`
+	Theme           string `mapstructure:"theme"`
 }
 
 func GetConfig(flags *pflag.FlagSet) BtConfig {

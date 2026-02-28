@@ -37,8 +37,15 @@ FileSelect → preview_gen goroutine → PreviewDoneChan → cache → render
 ### Operations (state.OpBuf)
 `Noop` | `Move(d)` | `Copy(y)` | `Delete(D)` | `Go(gg/G)` | `Insert(i→f/d)` | `Rename(r)`
 
-### Config Keys
-`padding` (5) | `file_preview` (true) | `highlight_indent` (true) | `in_place_render` (false)
+### Config Keys (`~/.config/bt/conf.yaml`)
+`padding` (5) | `file_preview` (true) | `highlight_indent` (true) | `in_place_render` (false) | `theme` ("dark")
+
+### Theme System (`internal/ui/theme.go`)
+- Built-ins: `dark` (default), `light`
+- Custom: set `theme: mytheme` → loads `~/.config/bt/mytheme.yaml`
+- Partial files ok — missing keys fall back to dark defaults
+- See `examples/light.yaml` for all color keys
+- `ThemeColors.ToStylesheet()` builds `Stylesheet` from hex strings
 
 ## Commands
 ```bash

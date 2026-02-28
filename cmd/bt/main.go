@@ -94,7 +94,7 @@ func main() {
 
 	m, err := newModel(
 		rootPath,
-		ui.DefaultStylesheet,
+		ui.LoadTheme(conf.Theme).ToStylesheet(),
 		conf.Padding,
 		conf.FilePreview,
 		conf.HighlightIndent,

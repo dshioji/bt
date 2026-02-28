@@ -1,0 +1,26 @@
+# bt light theme - copy to ~/.config/bt/light.yaml (built-in, no copy needed)
+# or use as a base for your own theme: save as ~/.config/bt/mytheme.yaml
+# then set `theme: mytheme` in ~/.config/bt/conf.yaml
+#
+# All values are hex color codes (#RRGGBB).
+# Omitted keys fall back to the dark theme defaults.
+
+selected_path: "#2E7D32"
+finfo_permissions: "#E65100"
+finfo_last_updated: "#212121"
+finfo_size: "#212121"
+finfo_sep: "#9E9E9E"
+operation_bar: "#212121"
+operation_bar_input_bg: "#E0E0E0"
+err_bar: "#B71C1C"
+help_msg: "#E65100"
+help_content: "#4527A0"
+tree_regular_file: "#212121"
+tree_directory: "#1565C0"
+tree_link: "#00695C"
+tree_marked_bg: "#F5F5F5"
+tree_selection_arrow: "#E65100"
+tree_indent: "#BDBDBD"
+tree_indent_selected: "#E65100"
+plain_text_preview: "#424242"
+plain_text_preview_border: "#BDBDBD"
