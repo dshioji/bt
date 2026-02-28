@@ -131,10 +131,19 @@ func (r *Renderer) Render(s *state.State, window Dimentions) string {
 		rightPane = renderedContent
 	}
 
+	// Clamp both panes to their allocated dimensions before joining.
+	// Without this, wide lines in chroma/glamour output wrap in the terminal,
+	// making the right pane taller than availableHeight. JoinHorizontal then
+	// pads the left pane with empty rows to match, breaking the tree layout.
+	availableHeight := window.Height - headLen
+	paneClamp := lipgloss.NewStyle().
+		MaxHeight(availableHeight).
+		MaxWidth(sectionWidth)
+
 	renderedTreeWithContent := lipgloss.JoinHorizontal(
 		lipgloss.Top,
-		renderedTree,
-		rightPane,
+		paneClamp.Render(renderedTree),
+		paneClamp.Render(rightPane),
 	)
 
 	return renderedHeading + "\n" + renderedTreeWithContent
