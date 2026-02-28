@@ -13,6 +13,7 @@ type BtConfig struct {
 	HighlightIndent bool   `mapstructure:"highlight_indent"`
 	InPlaceRender   bool   `mapstructure:"in_place_render"`
 	Theme           string `mapstructure:"theme"`
+	LinearNav       bool   `mapstructure:"linear_nav"`
 }
 
 func GetConfig(flags *pflag.FlagSet) BtConfig {

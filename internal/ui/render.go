@@ -192,7 +192,7 @@ func (r *Renderer) renderHelp(width int) (string, int) {
 	help := []string{
 		"j / arr down     Select next child",
 		"k / arr up       Select previous child",
-		"pgdown / pgup    Jump 10 items down / up",
+		"pgdown / pgup    Jump 10 rows down / up",
 		"h / arr left     Move up a dir",
 		"l / arr right    Enter selected directory",
 		"tab              Mark selected child and move down",

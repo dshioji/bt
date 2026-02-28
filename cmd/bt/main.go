@@ -53,8 +53,9 @@ func newModel(
 	padding int,
 	filePreview bool,
 	highlightCurrentIndent bool,
+	linearNav bool,
 ) (model, error) {
-	s, err := state.InitState(root)
+	s, err := state.InitState(root, linearNav)
 	if err != nil {
 		return model{}, err
 	}
@@ -98,6 +99,7 @@ func main() {
 		conf.Padding,
 		conf.FilePreview,
 		conf.HighlightIndent,
+		conf.LinearNav,
 	)
 	if err != nil {
 		fmt.Printf("Error on init: %v", err)

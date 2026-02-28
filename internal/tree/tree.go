@@ -104,6 +104,55 @@ func (t *Tree) SelectPrevNChildren(n int) {
 	t.CurrentDir.selectedChildIdx = max(t.CurrentDir.selectedChildIdx-n, 0)
 }
 
+// VisibleNodes returns every node in DFS render order that is currently
+// visible (parent's Children != nil), excluding Root itself.
+func (t *Tree) VisibleNodes() []*Node {
+	var nodes []*Node
+	var walk func(*Node)
+	walk = func(node *Node) {
+		for _, child := range node.Children {
+			nodes = append(nodes, child)
+			if child.Children != nil {
+				walk(child)
+			}
+		}
+	}
+	walk(t.Root)
+	return nodes
+}
+
+// SelectLinearNext moves selection one step forward across all visible rows.
+func (t *Tree) SelectLinearNext() {
+	t.selectLinearN(1)
+}
+
+// SelectLinearPrev moves selection one step backward across all visible rows.
+func (t *Tree) SelectLinearPrev() {
+	t.selectLinearN(-1)
+}
+
+// SelectLinearNextN moves selection n steps forward across all visible rows.
+func (t *Tree) SelectLinearNextN(n int) {
+	t.selectLinearN(n)
+}
+
+// SelectLinearPrevN moves selection n steps backward across all visible rows.
+func (t *Tree) SelectLinearPrevN(n int) {
+	t.selectLinearN(-n)
+}
+
+func (t *Tree) selectLinearN(delta int) {
+	nodes := t.VisibleNodes()
+	selected := t.GetSelectedChild()
+	for i, n := range nodes {
+		if n == selected {
+			target := max(0, min(i+delta, len(nodes)-1))
+			t.NavigateToNode(nodes[target])
+			return
+		}
+	}
+}
+
 // SearchVisible returns all currently expanded nodes whose names contain query
 // (case-insensitive), walking the full tree from Root.
 func (t *Tree) SearchVisible(query string) []*Node {

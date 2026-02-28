@@ -59,9 +59,11 @@ type State struct {
 	SearchMatches []*t.Node
 	SearchIdx     int
 	SearchQuery   string
+
+	LinearNav bool
 }
 
-func InitState(root string) (*State, error) {
+func InitState(root string, linearNav bool) (*State, error) {
 	tree, ncc, err := t.InitTree(root, nil)
 	if err != nil {
 		return nil, err
@@ -71,6 +73,7 @@ func InitState(root string) (*State, error) {
 		OpBuf:       Noop,
 		InputBuf:    []rune{},
 		NodeChanges: ncc,
+		LinearNav:   linearNav,
 	}, nil
 }
 
@@ -277,13 +280,29 @@ func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 		s.Tree.ToggleMarkSelectedChild()
 		s.Tree.SelectNextChild()
 	case "j", "down":
-		s.Tree.SelectNextChild()
+		if s.LinearNav {
+			s.Tree.SelectLinearNext()
+		} else {
+			s.Tree.SelectNextChild()
+		}
 	case "k", "up":
-		s.Tree.SelectPreviousChild()
+		if s.LinearNav {
+			s.Tree.SelectLinearPrev()
+		} else {
+			s.Tree.SelectPreviousChild()
+		}
 	case "pgdown":
-		s.Tree.SelectNextNChildren(10)
+		if s.LinearNav {
+			s.Tree.SelectLinearNextN(10)
+		} else {
+			s.Tree.SelectNextNChildren(10)
+		}
 	case "pgup":
-		s.Tree.SelectPrevNChildren(10)
+		if s.LinearNav {
+			s.Tree.SelectLinearPrevN(10)
+		} else {
+			s.Tree.SelectPrevNChildren(10)
+		}
 	case "/":
 		s.SearchMatches = nil
 		s.SearchIdx = 0
