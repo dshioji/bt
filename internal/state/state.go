@@ -311,9 +311,9 @@ func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 		return func() tea.Msg { return PreviewScrollMsg{1} }
 	case "K":
 		return func() tea.Msg { return PreviewScrollMsg{-1} }
-	case "shift+pgdown":
+	case "shift+pgdown", "ctrl+d":
 		return func() tea.Msg { return PreviewScrollMsg{20} }
-	case "shift+pgup":
+	case "shift+pgup", "ctrl+u":
 		return func() tea.Msg { return PreviewScrollMsg{-20} }
 	case "/":
 		s.SearchMatches = nil
