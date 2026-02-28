@@ -296,6 +296,44 @@ func (t *Tree) MoveMarkedToCurrentDir() error {
 	t.Marked = nil
 	return nil
 }
+// CollapseSelected collapses the currently selected directory (no-op if not expanded).
+func (t *Tree) CollapseSelected() {
+	if sel := t.GetSelectedChild(); sel != nil && sel.Children != nil {
+		t.collapseRecursive(sel)
+	}
+}
+
+// AscendRoot re-roots the tree at the parent filesystem directory,
+// preserving the expansion state of the current root.
+func (t *Tree) AscendRoot() error {
+	parentPath := filepath.Dir(t.Root.Path)
+	if parentPath == t.Root.Path {
+		return nil // already at filesystem root
+	}
+	parentInfo, err := os.Lstat(parentPath)
+	if err != nil {
+		return err
+	}
+	newRoot := NewNode(parentPath, parentInfo, nil)
+	if err := newRoot.readChildren(t.sortingFunc); err != nil {
+		return err
+	}
+	// Replace the fresh sibling node with our loaded old root so expansion
+	// state is preserved.
+	oldRoot := t.Root
+	oldRoot.Parent = newRoot
+	for i, ch := range newRoot.Children {
+		if ch.Path == oldRoot.Path {
+			newRoot.Children[i] = oldRoot
+			newRoot.selectedChildIdx = i
+			break
+		}
+	}
+	t.Root = newRoot
+	t.CurrentDir = newRoot
+	return t.watcher.Add(parentPath)
+}
+
 func (t *Tree) CollapseOrExpandSelected() error {
 	selectedChild := t.GetSelectedChild()
 	if selectedChild == nil {

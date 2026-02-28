@@ -330,7 +330,20 @@ func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 			s.ErrBuf = err.Error()
 		}
 	case "h", "left":
-		s.Tree.SetParentAsCurrent()
+		child := s.Tree.GetSelectedChild()
+		if child != nil && child.Info.IsDir() && child.Children != nil {
+			// Collapse the open directory (vim-tree style)
+			s.Tree.CollapseSelected()
+		} else {
+			prevRoot := s.Tree.Root
+			s.Tree.SetParentAsCurrent()
+			// If already at root, ascend to parent filesystem directory
+			if s.Tree.Root == prevRoot && s.Tree.CurrentDir == s.Tree.Root {
+				if err := s.Tree.AscendRoot(); err != nil {
+					s.ErrBuf = err.Error()
+				}
+			}
+		}
 	case "y":
 		if len(s.Tree.Marked) != 0 {
 			s.OpBuf = Copy
