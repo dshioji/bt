@@ -302,6 +302,13 @@ func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 				s.ErrBuf = err.Error()
 			}
 		}
+	case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+		depth := int(msg.Runes[0] - '0')
+		if err := s.Tree.ExpandToDepth(depth); err != nil {
+			s.ErrBuf = err.Error()
+		}
+	case "0":
+		s.Tree.CollapseAll()
 	}
 	return nil
 }

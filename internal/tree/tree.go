@@ -221,6 +221,59 @@ func (t *Tree) CollapseOrExpandSelected() error {
 	return nil
 }
 
+// collapseRecursive recursively collapses node and all its expanded descendants.
+func (t *Tree) collapseRecursive(node *Node) {
+	if node == nil || node.Children == nil {
+		return
+	}
+	for _, child := range node.Children {
+		if child.Info.IsDir() {
+			t.collapseRecursive(child)
+		}
+	}
+	node.orphanChildren()
+	t.watcher.Remove(node.Path)
+}
+
+// CollapseAll collapses all expanded directories within CurrentDir.
+func (t *Tree) CollapseAll() {
+	for _, child := range t.CurrentDir.Children {
+		t.collapseRecursive(child)
+	}
+}
+
+// ExpandToDepth expands directories within CurrentDir to the given depth.
+// depth=1 shows only immediate children (all sub-dirs collapsed),
+// depth=2 expands one level of sub-dirs, etc. Mirrors tree -L N behaviour.
+func (t *Tree) ExpandToDepth(depth int) error {
+	return t.expandNodeToDepth(t.CurrentDir, depth)
+}
+
+func (t *Tree) expandNodeToDepth(node *Node, depth int) error {
+	if node == nil || !node.Info.IsDir() {
+		return nil
+	}
+	if node.Children == nil {
+		if err := node.readChildren(t.sortingFunc); err != nil {
+			return err
+		}
+		t.watcher.Add(node.Path)
+	}
+	for _, child := range node.Children {
+		if !child.Info.IsDir() {
+			continue
+		}
+		if depth <= 1 {
+			t.collapseRecursive(child)
+		} else {
+			if err := t.expandNodeToDepth(child, depth-1); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func InitTree(dir string, sortingFunc NodeSortingFunc) (*Tree, <-chan NodeChange, error) {
 	absDir, err := filepath.Abs(dir)
 	if err != nil {

@@ -202,6 +202,8 @@ func (r *Renderer) renderHelp(width int) (string, int) {
 		"G                Go to last child in current directory",
 		"H                Toggle hidden files in current directory",
 		"enter            Open / close selected directory or open file (xdg-open / open)",
+		"1-9              Expand current dir to N levels deep (like tree -L N)",
+		"0                Collapse all directories in current view",
 		"esc              Clear error message / stop current operation / drop marks",
 		"?                Toggle help",
 		"q / ctrl+c       Exit",
