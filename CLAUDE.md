@@ -56,4 +56,4 @@ make lint     # go fmt
 ```
 
 ## Key Bindings
-`j/k` move | `h/l` parent/child | `tab` mark | `d/y` move/copy | `D` delete | `r` rename | `i` insert | `e` edit | `H` hidden | `?` help | `gg/G` top/bottom | `1-9` expand N levels deep | `0` collapse all
+`j/k` move | `pgdown/pgup` jump 10 | `h/l` parent/child | `tab` mark | `d/y` move/copy | `D` delete | `r` rename | `i` insert | `e` edit | `H` hidden | `?` help | `gg/G` top/bottom | `1-9` expand N levels | `0` collapse all | `/` search | `n/N` next/prev match

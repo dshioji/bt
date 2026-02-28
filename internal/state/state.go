@@ -21,6 +21,7 @@ const (
 	InsertFile
 	InsertDir
 	Rename
+	SearchInput
 )
 
 func (o Operation) Repr() string {
@@ -34,11 +35,12 @@ func (o Operation) Repr() string {
 		"enter new file name:",
 		"enter new directory name:",
 		"renaming",
+		"/",
 	}[o]
 }
 func (o Operation) IsInput() bool {
 	switch o {
-	case InsertDir, InsertFile, Rename:
+	case InsertDir, InsertFile, Rename, SearchInput:
 		return true
 	default:
 		return false
@@ -53,6 +55,10 @@ type State struct {
 	ErrBuf      string
 	NodeChanges <-chan t.NodeChange
 	HelpToggle  bool
+
+	SearchMatches []*t.Node
+	SearchIdx     int
+	SearchQuery   string
 }
 
 func InitState(root string) (*State, error) {
@@ -97,6 +103,8 @@ func (s *State) ProcessKey(msg tea.KeyMsg) tea.Cmd {
 		return s.processKeyInsertDir(msg)
 	case Rename:
 		return s.processKeyRename(msg)
+	case SearchInput:
+		return s.processKeySearch(msg)
 	default:
 		return s.processKeyDefault(msg)
 	}
@@ -223,12 +231,43 @@ func (s *State) processKeyCopy(msg tea.KeyMsg) tea.Cmd {
 	}
 	return nil
 }
+func (s *State) processKeySearch(msg tea.KeyMsg) tea.Cmd {
+	switch msg.String() {
+	case "enter":
+		query := string(s.InputBuf)
+		s.SearchQuery = query
+		s.SearchMatches = s.Tree.SearchVisible(query)
+		s.SearchIdx = 0
+		s.OpBuf = Noop
+		s.InputBuf = []rune{}
+		if len(s.SearchMatches) > 0 {
+			s.Tree.NavigateToNode(s.SearchMatches[0])
+		} else {
+			s.ErrBuf = "no match: " + query
+		}
+	default:
+		return s.processKeyAnyInput(msg)
+	}
+	return nil
+}
+
+func (s *State) navigateSearchMatch(dir int) {
+	if len(s.SearchMatches) == 0 {
+		return
+	}
+	s.SearchIdx = (s.SearchIdx + dir + len(s.SearchMatches)) % len(s.SearchMatches)
+	s.Tree.NavigateToNode(s.SearchMatches[s.SearchIdx])
+}
+
 func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 	switch msg.String() {
 	case "esc":
 		s.Tree.DropMark()
 		s.OpBuf = Noop
 		s.ErrBuf = ""
+		s.SearchMatches = nil
+		s.SearchIdx = 0
+		s.SearchQuery = ""
 	case "ctrl+c", "q":
 		return tea.Quit
 	case "shift+tab":
@@ -241,6 +280,19 @@ func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 		s.Tree.SelectNextChild()
 	case "k", "up":
 		s.Tree.SelectPreviousChild()
+	case "pgdown":
+		s.Tree.SelectNextNChildren(10)
+	case "pgup":
+		s.Tree.SelectPrevNChildren(10)
+	case "/":
+		s.SearchMatches = nil
+		s.SearchIdx = 0
+		s.InputBuf = []rune{}
+		s.OpBuf = SearchInput
+	case "n":
+		s.navigateSearchMatch(1)
+	case "N":
+		s.navigateSearchMatch(-1)
 	case "l", "right":
 		err := s.Tree.SetSelectedChildAsCurrent()
 		if err != nil {

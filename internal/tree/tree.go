@@ -96,6 +96,50 @@ func (t *Tree) SelectPreviousChild() {
 		t.CurrentDir.selectedChildIdx -= 1
 	}
 }
+func (t *Tree) SelectNextNChildren(n int) {
+	max := len(t.CurrentDir.Children) - 1
+	t.CurrentDir.selectedChildIdx = min(t.CurrentDir.selectedChildIdx+n, max)
+}
+func (t *Tree) SelectPrevNChildren(n int) {
+	t.CurrentDir.selectedChildIdx = max(t.CurrentDir.selectedChildIdx-n, 0)
+}
+
+// SearchVisible returns all currently expanded nodes whose names contain query
+// (case-insensitive), walking the full tree from Root.
+func (t *Tree) SearchVisible(query string) []*Node {
+	if query == "" {
+		return nil
+	}
+	query = strings.ToLower(query)
+	var matches []*Node
+	var walk func(*Node)
+	walk = func(node *Node) {
+		for _, child := range node.Children {
+			if strings.Contains(strings.ToLower(child.Info.Name()), query) {
+				matches = append(matches, child)
+			}
+			if child.Children != nil {
+				walk(child)
+			}
+		}
+	}
+	walk(t.Root)
+	return matches
+}
+
+// NavigateToNode sets CurrentDir to node's parent and selects node.
+func (t *Tree) NavigateToNode(node *Node) {
+	if node == nil || node.Parent == nil {
+		return
+	}
+	t.CurrentDir = node.Parent
+	for i, ch := range node.Parent.Children {
+		if ch == node {
+			node.Parent.selectedChildIdx = i
+			break
+		}
+	}
+}
 func (t *Tree) SetSelectedChildAsCurrent() error {
 	selectedChild := t.GetSelectedChild()
 	if selectedChild == nil {

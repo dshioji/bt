@@ -142,6 +142,10 @@ func (r *Renderer) renderHeading(s *state.State, width int) (string, int) {
 	}
 	operationBar := fmt.Sprintf(": %s", s.OpBuf.Repr())
 
+	if len(s.SearchMatches) > 0 {
+		operationBar += fmt.Sprintf("  /%s [%d/%d]", s.SearchQuery, s.SearchIdx+1, len(s.SearchMatches))
+	}
+
 	if s.Tree.Marked != nil {
 		paths := []string{}
 		for _, marked := range s.Tree.Marked {
@@ -188,6 +192,7 @@ func (r *Renderer) renderHelp(width int) (string, int) {
 	help := []string{
 		"j / arr down     Select next child",
 		"k / arr up       Select previous child",
+		"pgdown / pgup    Jump 10 items down / up",
 		"h / arr left     Move up a dir",
 		"l / arr right    Enter selected directory",
 		"tab              Mark selected child and move down",
@@ -204,6 +209,8 @@ func (r *Renderer) renderHelp(width int) (string, int) {
 		"enter            Open / close selected directory or open file (xdg-open / open)",
 		"1-9              Expand current dir to N levels deep (like tree -L N)",
 		"0                Collapse all directories in current view",
+		"/                Search visible files (Enter to confirm)",
+		"n / N            Next / previous search match",
 		"esc              Clear error message / stop current operation / drop marks",
 		"?                Toggle help",
 		"q / ctrl+c       Exit",
