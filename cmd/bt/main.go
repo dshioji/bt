@@ -33,6 +33,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.window = ui.Dimentions{Height: msg.Height, Width: msg.Width}
 	case tea.KeyMsg:
 		return m, m.appState.ProcessKey(msg)
+	case state.PreviewScrollMsg:
+		if ch := m.appState.Tree.GetSelectedChild(); ch != nil {
+			m.renderer.ScrollPreview(ch.Path, msg.Delta)
+		}
 	case tree.NodeChange:
 		m.renderer.RemovePreviewCache(msg.Path)
 		m.appState.ProcessNodeChange(msg)
@@ -54,12 +58,15 @@ func newModel(
 	filePreview bool,
 	highlightCurrentIndent bool,
 	linearNav bool,
+	glowEnabled bool,
+	chromaEnabled bool,
+	chromaStyle string,
 ) (model, error) {
 	s, err := state.InitState(root, linearNav)
 	if err != nil {
 		return model{}, err
 	}
-	renderer := ui.NewRenderer(style, padding, filePreview, highlightCurrentIndent)
+	renderer := ui.NewRenderer(style, padding, filePreview, highlightCurrentIndent, glowEnabled, chromaEnabled, chromaStyle)
 	return model{
 		appState: s,
 		renderer: renderer,
@@ -100,6 +107,9 @@ func main() {
 		conf.FilePreview,
 		conf.HighlightIndent,
 		conf.LinearNav,
+		conf.GlowPreview,
+		conf.ChromaPreview,
+		conf.ChromaStyle,
 	)
 	if err != nil {
 		fmt.Printf("Error on init: %v", err)

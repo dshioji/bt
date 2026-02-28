@@ -60,6 +60,13 @@ type Renderer struct {
 	highlightCurrentIndent bool
 
 	offsetMem int
+
+	previewOffset     int            // current scroll offset for right pane
+	previewOffsetPath string         // path for which offset is valid (reset when changed)
+	inFlight          map[string]bool // dedup: tracks currently-generating previews
+	glowEnabled       bool
+	chromaEnabled     bool
+	chromaStyle       string
 }
 
 func NewRenderer(
@@ -67,6 +74,9 @@ func NewRenderer(
 	edgePadding int,
 	previewEnabled bool,
 	highlightCurrentIndent bool,
+	glowEnabled bool,
+	chromaEnabled bool,
+	chromaStyle string,
 ) *Renderer {
 	previewChan := make(chan Preview, previewChangBuffer)
 	return &Renderer{
@@ -77,11 +87,16 @@ func NewRenderer(
 		previewGenChan:         previewChan,
 		previewEnabled:         previewEnabled,
 		highlightCurrentIndent: highlightCurrentIndent,
+		inFlight:               map[string]bool{},
+		glowEnabled:            glowEnabled,
+		chromaEnabled:          chromaEnabled,
+		chromaStyle:            chromaStyle,
 	}
 }
 
-func (r *Renderer) SetPreviewCache(preivew Preview) {
-	r.previewCache[preivew.Path] = preivew
+func (r *Renderer) SetPreviewCache(preview Preview) {
+	r.previewCache[preview.Path] = preview
+	delete(r.inFlight, preview.Path)
 }
 
 func (r *Renderer) RemovePreviewCache(path string) {
@@ -207,6 +222,8 @@ func (r *Renderer) renderHelp(width int) (string, int) {
 		"G                Go to last child in current directory",
 		"H                Toggle hidden files in current directory",
 		"enter            Open / close selected directory or open file (xdg-open / open)",
+		"J / K            Scroll preview down / up 1 line",
+		"shift+pgdown/up  Scroll preview down / up one page",
 		"1-9              Expand current dir to N levels deep (like tree -L N)",
 		"0                Collapse all directories in current view",
 		"/                Search visible files (Enter to confirm)",
@@ -239,21 +256,47 @@ func (r *Renderer) renderSelectedFileContent(tree *t.Tree, dim Dimentions) strin
 	if ch == nil {
 		return ""
 	}
+
+	// Reset scroll offset when selected file changes
+	if ch.Path != r.previewOffsetPath {
+		r.previewOffset = 0
+		r.previewOffsetPath = ch.Path
+	}
+
 	preview, ok := r.previewCache[ch.Path]
 	if !ok || preview.Dim != dim {
 		// Async preview generation. Main thread will read from preview channel and call Update,
 		// which will then set the cache and call Render.
-
-		// TODO: On long preview generaitons I can potentially spawn a lot of gorutines
-		// generating preview for the same file, if i'll go back and forth selecting it and the neighbor.
-		// I can solve it by using some locking mechanism.
+		// Deduplication: skip spawning if a goroutine is already generating for this path.
+		if r.inFlight[ch.Path] {
+			return loadingPlaceholder
+		}
+		r.inFlight[ch.Path] = true
 		go func() {
-			preview := GeneratePreview(ch, dim, r.Style)
+			preview := GeneratePreview(ch, dim, r.Style, r.glowEnabled, r.chromaEnabled, r.chromaStyle)
 			r.previewGenChan <- Preview{Content: preview, Dim: dim, Path: ch.Path}
 		}()
 		return loadingPlaceholder
 	}
-	return preview.Content
+	return cropPreviewContent(preview.Content, r.previewOffset, dim.Height)
+}
+
+func cropPreviewContent(content string, offset int, height int) string {
+	lines := strings.Split(content, "\n")
+	if offset >= len(lines) {
+		offset = max(0, len(lines)-1)
+	}
+	end := min(offset+height, len(lines))
+	return strings.Join(lines[offset:end], "\n")
+}
+
+func (r *Renderer) ScrollPreview(path string, delta int) {
+	if r.previewOffsetPath != path {
+		r.previewOffset = 0
+		r.previewOffsetPath = path
+	}
+	r.previewOffset = max(0, r.previewOffset+delta)
+	// upper bound clamped at render time in cropPreviewContent
 }
 
 // Crops tree lines, such that current line is visible and view is consistent.

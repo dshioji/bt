@@ -9,6 +9,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// PreviewScrollMsg is emitted when the user scrolls the preview pane.
+// Handled by model.Update which calls renderer.ScrollPreview.
+type PreviewScrollMsg struct{ Delta int }
+
 type Operation int
 
 const (
@@ -303,6 +307,14 @@ func (s *State) processKeyDefault(msg tea.KeyMsg) tea.Cmd {
 		} else {
 			s.Tree.SelectPrevNChildren(10)
 		}
+	case "J":
+		return func() tea.Msg { return PreviewScrollMsg{1} }
+	case "K":
+		return func() tea.Msg { return PreviewScrollMsg{-1} }
+	case "shift+pgdown":
+		return func() tea.Msg { return PreviewScrollMsg{20} }
+	case "shift+pgup":
+		return func() tea.Msg { return PreviewScrollMsg{-20} }
 	case "/":
 		s.SearchMatches = nil
 		s.SearchIdx = 0

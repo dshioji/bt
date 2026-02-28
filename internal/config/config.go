@@ -14,6 +14,9 @@ type BtConfig struct {
 	InPlaceRender   bool   `mapstructure:"in_place_render"`
 	Theme           string `mapstructure:"theme"`
 	LinearNav       bool   `mapstructure:"linear_nav"`
+	GlowPreview     bool   `mapstructure:"glow_preview"`
+	ChromaPreview   bool   `mapstructure:"chroma_preview"`
+	ChromaStyle     string `mapstructure:"chroma_style"`
 }
 
 func GetConfig(flags *pflag.FlagSet) BtConfig {
